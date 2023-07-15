@@ -1,7 +1,7 @@
 #include <SoftwareSerial.h>
 
-#define rxPin 2
-#define txPin 3
+#define rxPin 8
+#define txPin 9
 #define baudrate 9600
 String startBit = "1";
 String quality = "1";

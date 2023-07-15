@@ -32,11 +32,11 @@ void setup() {
 void loop() {
   if (IS_OK(lidar.waitPoint())) {
     analogWrite(RPLIDAR_MOTOR, 255);
-    float distance = lidar.getCurrentPoint().distance; //distance value in mm unit
+    float distance = lidar.getCurrentPoint().distance/10; //distance value in cm unit
     float angle    = lidar.getCurrentPoint().angle; //anglue value in degree
     bool  startBit = lidar.getCurrentPoint().startBit; //whether this point is belong to a new scan
     byte  quality  = lidar.getCurrentPoint().quality; //quality of the current measurement
-    msg = String(startBit)+","+String(quality)+","+String(distance)+","+String(angle)+"\n";
+    msg = String(startBit)+","+String(quality)+","+String(distance)+","+String(angle)+",""\n";
     // send msg
     hc05.println(msg); 
   } else {
