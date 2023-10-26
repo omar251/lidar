@@ -1,0 +1,77 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import serial
+import math
+
+bluetooth_port = "COM3"  # Replace with the appropriate port for your Bluetooth device
+baud_rate = 9600
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.set_xlabel('X')
+ax.set_ylabel('Y')
+ax.set_zlabel('Z')
+ax.set_xlim(-150, 150)  # Adjust the limits as needed
+ax.set_ylim(-150, 150)
+ax.set_zlim(0, 150)  # Adjust the limits as needed
+plt.ion()  # Turn on interactive mode for real-time plotting
+
+# Open the serial port for communication
+s = serial.Serial(bluetooth_port, baud_rate)
+
+z = 0  # Initialize the Z-coordinate
+count = 0
+try:
+    while True:
+        # Read a line of data from the serial port
+        data = s.readline().decode().strip()
+
+        # Split the data into distance and angle
+        if data:
+            parts = data.split(',')
+        else:
+            continue
+
+        try:
+            reset = float(parts[0])
+        except ValueError:
+            continue
+
+        try:
+            quality = float(parts[1])
+        except ValueError:
+            continue
+
+        try:
+            distance = float(parts[2])
+        except ValueError:
+            continue
+        if distance > 150 or distance < 15:
+            continue
+
+        try:
+            angle = round(float(parts[3]))
+        except ValueError:
+            continue
+        if angle > 360 or angle in [122, 123, 124, 125]:
+            continue
+
+        # Convert polar coordinates to Cartesian coordinates
+        if distance < 40 and not (angle > 90 and angle < 270):
+            x = distance * math.cos(math.radians(angle))
+            y = distance * math.sin(math.radians(angle))
+            if z < 5 :
+                ax.scatter(x, y, z, c='red')
+                plt.pause(0.01)  # Pause to update the plot
+                count = count + 1
+                if count > 20:
+                    z += 1  # Increment the Z-coordinate for the next layer
+                    count = 0
+except serial.SerialException as e:
+    print(str(e))
+finally:
+    s.close()
+
+# Keep the plot window open
+plt.ioff()
+plt.show()

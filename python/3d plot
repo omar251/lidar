@@ -1,0 +1,74 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import serial
+import math
+
+
+bluetooth_port = "COM3"  # Replace with the appropriate port for your Bluetooth device
+baud_rate = 9600
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.set_xlabel('X')
+ax.set_ylabel('Y') 
+ax.set_zlabel('Z')
+# Open the serial port for communication
+s = serial.Serial(bluetooth_port, baud_rate)
+running = True
+lidar = []
+res = 1
+count = 0
+z = 0
+try:
+    while z < 5:
+        # Read a line of data from the serial port
+        data = s.readline().decode().strip()
+
+        # Split the data into distance and angle
+        if data:
+            parts = data.split(',')
+        else:
+            continue
+
+        try:
+            reset = float(parts[0])
+        except ValueError:
+            continue
+
+        try:
+            quality = float(parts[1])
+        except ValueError:
+            continue
+
+        try:
+            distance = float(parts[2])
+        except ValueError:
+            continue
+        if distance > 150 or distance < 15:
+            continue
+
+        try:
+            angle = round(float(parts[3]))
+        except ValueError:
+            continue 
+        if angle > 360 or angle in [122,123,124,125]:
+            continue
+
+        if distance < 40 and not (angle > 90 and angle < 270):
+            x = distance * math.cos(math.radians(angle))
+            y = distance * math.sin(math.radians(angle))
+            lidar.append([x,y,z])
+            count = count + 1
+            if count > 100:
+                z += 1  # Increment the Z-coordinate for the next layer
+                count = 0
+            print(count,z)
+except serial.SerialException as e:
+    print(str(e))
+finally:
+    s.close()
+
+for point in lidar:
+    ax.scatter(point[0],point[1],point[2], c='red')
+
+plt.show()
